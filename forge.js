@@ -364,6 +364,30 @@
     ridges.style.setProperty('--px', rp.x.toFixed(3)); ridges.style.setProperty('--py', rp.y.toFixed(3));
   }
 
+  /* ---------- hero deck parallax ---------- */
+  const deckEl = $('[data-deck]'); const dp = {x: 0, y: 0};
+  function updateDeck() {
+    if (!deckEl || reduce || gentle || !fine) return;
+    const r = deckEl.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    dp.x = lerp(dp.x, -(mouse.x / innerWidth - .5), .06); dp.y = lerp(dp.y, -(mouse.y / innerHeight - .5), .06);
+    deckEl.style.setProperty('--px', dp.x.toFixed(3)); deckEl.style.setProperty('--py', dp.y.toFixed(3));
+  }
+
+  /* ---------- stacking project cards ---------- */
+  const ccs = $$('.cc');
+  function updateStack() {
+    if (!ccs.length || reduce || innerWidth <= 900) return;
+    ccs.forEach((c, i) => {
+      const n = ccs[i + 1];
+      const inner = c.firstElementChild;
+      if (!n) { inner.style.setProperty('--cover', 0); return; }
+      const a = c.getBoundingClientRect(), b = n.getBoundingClientRect();
+      if (a.bottom < -50 || a.top > innerHeight) return;
+      inner.style.setProperty('--cover', clamp((a.bottom - b.top) / a.height).toFixed(3));
+    });
+  }
+
   /* ---------- header, HUD, nav ---------- */
   const top = $('.top');
   const hudTemp = $('[data-hud-temp]'), hudFill = $('[data-hud-fill]'), hudState = $('[data-hud-state]'), hudSec = $('[data-hud-sec]');
@@ -428,6 +452,8 @@
     heatLetters();
     updateScrub();
     updateProcess();
+    updateDeck();
+    updateStack();
     updatePlate();
     updateLog();
     updateRidges();
