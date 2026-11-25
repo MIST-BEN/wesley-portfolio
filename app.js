@@ -4,10 +4,11 @@ const root = document.documentElement;
 let language = 'zh';
 try { language = localStorage.getItem('ww-portfolio-language') === 'en' ? 'en' : 'zh'; } catch { /* Storage can be disabled. */ }
 const languageButton = document.querySelector('#language');
-const menuButton = document.querySelector('.menu-toggle');
-const mobileNav = document.querySelector('#mobile-nav');
+const menuButton = document.querySelector('.menu-btn');
+const menu = document.querySelector('#menu');
 const dialog = document.querySelector('#project-dialog');
 const toast = document.querySelector('#toast');
+const copyButton = document.querySelector('#copy-email');
 let currentProject = null;
 let toastTimer;
 let previousFocus = null;
@@ -63,34 +64,49 @@ const projects = {
   }
 };
 
+const zh = () => language === 'zh';
+
 function translate(nextLanguage) {
   language = nextLanguage;
-  root.lang = language === 'zh' ? 'zh-CN' : 'en';
+  root.lang = zh() ? 'zh-CN' : 'en';
   document.querySelectorAll('[data-en][data-zh]').forEach(element => { element.textContent = element.dataset[language]; });
-  document.querySelectorAll('[data-label-en][data-label-zh]').forEach(element => { element.setAttribute('aria-label',language === 'zh' ? element.dataset.labelZh : element.dataset.labelEn); });
-  languageButton.innerHTML = language === 'en' ? '中 <span>/ EN</span>' : 'EN <span>/ 中</span>';
-  languageButton.setAttribute('aria-label', language === 'en' ? 'Switch to Chinese' : '切换到英文');
-  menuButton.setAttribute('aria-label', language === 'zh' ? '展开或收起导航' : 'Toggle navigation');
-  document.querySelector('.dialog-close').setAttribute('aria-label', language === 'zh' ? '关闭项目详情' : 'Close project details');
-  document.querySelector('#copy-email').setAttribute('aria-label', language === 'zh' ? '复制邮箱地址' : 'Copy email address');
-  document.querySelector('#copy-email').title = language === 'zh' ? '复制邮箱地址' : 'Copy email address';
-  document.title = (language === 'zh' ? document.body.dataset.titleZh : document.body.dataset.titleEn) || (language === 'zh' ? 'Wan Wenxuan — 前端工程师' : 'Wan Wenxuan — Frontend Engineer');
+  document.querySelectorAll('[data-label-en][data-label-zh]').forEach(element => { element.setAttribute('aria-label', zh() ? element.dataset.labelZh : element.dataset.labelEn); });
+  languageButton.textContent = zh() ? 'EN' : '中';
+  languageButton.setAttribute('aria-label', zh() ? '切换到英文' : 'Switch to Chinese');
+  updateMenuLabel();
+  document.querySelector('.dialog-close')?.setAttribute('aria-label', zh() ? '关闭项目详情' : 'Close project details');
+  if (copyButton) {
+    copyButton.setAttribute('aria-label', zh() ? '复制邮箱地址' : 'Copy email address');
+    copyButton.title = zh() ? '复制邮箱地址' : 'Copy email address';
+  }
+  document.title = (zh() ? document.body.dataset.titleZh : document.body.dataset.titleEn) || 'Wan Wenxuan';
   try { localStorage.setItem('ww-portfolio-language', language); } catch { /* The page works without storage. */ }
-  if (dialog.open && currentProject) renderProject(currentProject);
-  document.dispatchEvent(new CustomEvent('portfolio:language', {detail:language}));
+  if (dialog?.open && currentProject) renderProject(currentProject);
+  document.dispatchEvent(new CustomEvent('portfolio:language', {detail: language}));
 }
+languageButton.addEventListener('click', () => translate(zh() ? 'en' : 'zh'));
 
-function closeMenu() { mobileNav.hidden = true; menuButton.setAttribute('aria-expanded', 'false'); }
-menuButton.addEventListener('click', () => {
-  const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
-  mobileNav.hidden = isOpen;
-  menuButton.setAttribute('aria-expanded', String(!isOpen));
-});
-mobileNav.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
-window.matchMedia('(min-width: 681px)').addEventListener('change', event => { if (event.matches) closeMenu(); });
-languageButton.addEventListener('click', () => translate(language === 'en' ? 'zh' : 'en'));
+/* ---------- full-screen menu ---------- */
+const outside = [document.querySelector('main'), document.querySelector('footer'), document.querySelector('.skip-link')].filter(Boolean);
+function updateMenuLabel() {
+  const open = menu.classList.contains('open');
+  menuButton.setAttribute('aria-label', open ? (zh() ? '关闭菜单' : 'Close menu') : (zh() ? '打开菜单' : 'Open menu'));
+}
+function setMenu(open, {restoreFocus = true} = {}) {
+  menu.classList.toggle('open', open);
+  menuButton.setAttribute('aria-expanded', String(open));
+  document.body.classList.toggle('menu-open', open);
+  outside.forEach(element => { element.inert = open; });
+  updateMenuLabel();
+  document.dispatchEvent(new CustomEvent('portfolio:menu', {detail: open}));
+  if (open) setTimeout(() => menu.querySelector('a')?.focus({preventScroll: true}), 350);
+  else if (restoreFocus) menuButton.focus({preventScroll: true});
+}
+menuButton.addEventListener('click', () => setMenu(!menu.classList.contains('open')));
+menu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false, {restoreFocus: false})));
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && menu.classList.contains('open')) setMenu(false); });
 
+/* ---------- project overview dialog ---------- */
 function renderProject(key) {
   const project = projects[key][language];
   document.querySelector('#dialog-kicker').textContent = project.kicker;
@@ -108,7 +124,7 @@ function renderProject(key) {
   const note = document.createElement('p'); note.className = 'dialog-note'; note.textContent = project.note; content.append(note);
   const links = document.querySelector('#dialog-links'); links.replaceChildren(); links.className = 'dialog-actions';
   const caseLink = document.createElement('a'); caseLink.href = './case-' + key + '.html'; caseLink.className = 'button';
-  caseLink.textContent = (language === 'zh' ? '阅读完整案例' : 'Read full case study') + ' ↗'; links.append(caseLink);
+  caseLink.textContent = (zh() ? '阅读完整案例' : 'Read full case study') + ' ↗'; links.append(caseLink);
   if (key === 'shopping') {
     const demo = document.createElement('a'); demo.href = 'https://mist-ben.github.io/shopping/'; demo.className = 'button';
     demo.target = '_blank'; demo.rel = 'noopener noreferrer'; demo.textContent = project.demo + ' ↗'; links.append(demo);
@@ -117,47 +133,39 @@ function renderProject(key) {
   github.target = '_blank'; github.rel = 'noopener noreferrer'; github.textContent = project.github + ' ↗'; links.append(github);
 }
 
-document.querySelectorAll('.project-open').forEach(button => button.addEventListener('click', () => {
-  previousFocus = button; currentProject = button.dataset.project;
-  renderProject(currentProject); dialog.showModal(); dialog.scrollTop = 0;
-  document.body.classList.add('dialog-open'); document.querySelector('.dialog-close').focus({preventScroll:true});
-}));
-document.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', event => {
-  if (event.target !== dialog) return;
-  const bounds = dialog.getBoundingClientRect();
-  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
-});
-dialog.addEventListener('close', () => {
-  document.body.classList.remove('dialog-open'); currentProject = null;
-  previousFocus?.focus({preventScroll:true});
-});
+if (dialog) {
+  document.querySelectorAll('.project-open').forEach(button => button.addEventListener('click', () => {
+    previousFocus = button; currentProject = button.dataset.project;
+    renderProject(currentProject); dialog.showModal(); dialog.scrollTop = 0;
+    document.body.classList.add('dialog-open'); document.dispatchEvent(new CustomEvent('portfolio:menu', {detail: true}));
+    document.querySelector('.dialog-close').focus({preventScroll: true});
+  }));
+  document.querySelector('.dialog-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => {
+    if (event.target !== dialog) return;
+    const bounds = dialog.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+  });
+  dialog.addEventListener('close', () => {
+    document.body.classList.remove('dialog-open'); currentProject = null;
+    document.dispatchEvent(new CustomEvent('portfolio:menu', {detail: false}));
+    previousFocus?.focus({preventScroll: true});
+  });
+}
 
+/* ---------- copy email ---------- */
 function showToast(message) { clearTimeout(toastTimer); toast.textContent = message; toast.classList.add('show'); toastTimer = setTimeout(() => toast.classList.remove('show'), 3000); }
-document.querySelector('#copy-email').addEventListener('click', async () => {
+copyButton?.addEventListener('click', async () => {
   const email = '2975008537@qq.com';
   try {
     if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
     await navigator.clipboard.writeText(email);
-    showToast(language === 'zh' ? '邮箱已复制，期待你的来信。' : 'Email copied. Looking forward to hearing from you.');
+    showToast(zh() ? '邮箱已复制，期待你的来信。' : 'Email copied. Looking forward to hearing from you.');
   } catch {
-    const range = document.createRange(); range.selectNodeContents(document.querySelector('.email-row>a'));
+    const range = document.createRange(); range.selectNodeContents(document.querySelector('.email'));
     window.getSelection()?.removeAllRanges(); window.getSelection()?.addRange(range);
-    showToast(language === 'zh' ? '邮箱已选中，请按 Ctrl+C 或长按复制。' : 'Email selected. Press Ctrl+C or long-press to copy.');
+    showToast(zh() ? '邮箱已选中，请按 Ctrl+C 或长按复制。' : 'Email selected. Press Ctrl+C or long-press to copy.');
   }
 });
 
-if ('IntersectionObserver' in window) {
-  const sections = document.querySelectorAll('main section[id]');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      document.querySelectorAll('.desktop-nav a').forEach(link => {
-        if (link.hash === '#' + entry.target.id) link.setAttribute('aria-current', 'location');
-        else link.removeAttribute('aria-current');
-      });
-    });
-  }, {rootMargin:'-15% 0px -55% 0px', threshold:0});
-  sections.forEach(section => observer.observe(section));
-}
 translate(language);
