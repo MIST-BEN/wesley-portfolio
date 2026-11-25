@@ -562,12 +562,20 @@ html[lang="zh-CN"] .next-case strong{letter-spacing:-.01em}
 }
 
 /* ---------- reduced motion ---------- */
-@media (prefers-reduced-motion:reduce){
-  html:not(.force-motion) *,html:not(.force-motion) *::before,html:not(.force-motion) *::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
-  html:not(.force-motion) .cast .c{--t:0!important;opacity:1}
-  html:not(.force-motion) [data-reveal]{opacity:1;transform:none}
-  html:not(.force-motion) .about-lead .w{color:var(--bone)}
-  html:not(.force-motion) .about-lead .w.hl{color:var(--amber)}
-  html:not(.force-motion) .ridges path{stroke-dashoffset:0}
-  html:not(.force-motion) .sheet-fig[data-heat] .window{filter:none;box-shadow:none}
-}
+/* ---------- motion off (visitor turned it off with the 动效 toggle) ---------- */
+html.calm *,html.calm *::before,html.calm *::after{animation-duration:.001ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+html.calm .cast .c{--t:0!important;opacity:1}
+html.calm [data-reveal]{opacity:1;transform:none}
+html.calm .about-lead .w{color:var(--bone)}
+html.calm .about-lead .w.hl{color:var(--amber)}
+html.calm .ridges path{stroke-dashoffset:0}
+html.calm .sheet-fig[data-heat] .window{filter:none;box-shadow:none}
+html.calm .grain{animation:none}
+
+/* ---------- gentle: the OS asked for reduced motion; keep heat and light, drop travel ---------- */
+html.gentle [data-reveal]{transform:none}
+html.gentle .cast .c{transform:none;filter:none}
+html.gentle .grain,html.gentle .fog,html.gentle .beam{animation:none}
+html.gentle .menu-list a{transform:none}
+html.gentle .hero-meta,html.gentle .hero-foot,html.gentle .hero-hint{animation-name:fade}
+@keyframes fade{from{opacity:0}to{opacity:1}}

@@ -4,9 +4,10 @@
    a pinned process line, a brushed nameplate and a temperature gauge that cools as you read. */
 (() => {
   const root = document.documentElement;
-  const force = /[?&]motion\b/.test(location.search);
-  if (force) root.classList.add('force-motion');
-  const reduce = !force && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // calm: the visitor switched motion off (toggle in the header).
+  // gentle: the OS asks for reduced motion - keep heat, light and sparks; drop smooth-scroll and parallax.
+  const reduce = root.classList.contains('calm');
+  const gentle = root.classList.contains('gentle');
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -24,7 +25,7 @@
 
   /* ---------- smooth scroll ---------- */
   let lenis = null;
-  if (!reduce && typeof window.Lenis === 'function') {
+  if (!reduce && !gentle && typeof window.Lenis === 'function') {
     try { lenis = new window.Lenis({lerp: .09, smoothWheel: true}); } catch { lenis = null; }
   }
   document.addEventListener('portfolio:menu', e => { if (lenis) e.detail ? lenis.stop() : lenis.start(); });
@@ -37,7 +38,7 @@
     if (!target) return;
     e.preventDefault();
     if (lenis) lenis.scrollTo(url.hash === '#top' ? 0 : target, {duration: 1.5});
-    else target.scrollIntoView({behavior: reduce ? 'auto' : 'smooth'});
+    else target.scrollIntoView({behavior: reduce || gentle ? 'auto' : 'smooth'});
     history.replaceState(null, '', url.hash);
     if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
     target.focus({preventScroll: true});
@@ -211,7 +212,7 @@
     const r = molten.getBoundingClientRect();
     mpos.x = lerp(mpos.x, mouse.x, .08); mpos.y = lerp(mpos.y, mouse.y, .08);
     mh = lerp(mh, clamp(mouse.speed / 60) * (mouse.seen ? 1 : 0) + (mouse.seen ? .35 : 0), .06);
-    gl.uniform2f(U.r, w, h); gl.uniform1f(U.t, time / 1000);
+    gl.uniform2f(U.r, w, h); gl.uniform1f(U.t, time / (gentle ? 2200 : 1000));
     gl.uniform2f(U.m, (mpos.x - r.left) * scale, (r.bottom - mpos.y) * scale);
     gl.uniform1f(U.mh, mh);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -328,7 +329,7 @@
   const plateWrap = $('[data-plate]'), plate = plateWrap && $('.plate', plateWrap);
   const pl = {rx: 6, ry: -10};
   function updatePlate() {
-    if (!plate || reduce) return;
+    if (!plate || reduce || gentle) return;
     const r = plateWrap.getBoundingClientRect();
     if (r.bottom < 0 || r.top > innerHeight) return;
     const nx = clamp((mouse.x - (r.left + r.width / 2)) / innerWidth * 2, -1, 1);
@@ -355,7 +356,7 @@
   const ridges = $('.ridges'), where = $('[data-where]');
   const rp = {x: 0, y: 0};
   function updateRidges() {
-    if (!ridges || reduce) return;
+    if (!ridges || reduce || gentle) return;
     const r = where.getBoundingClientRect();
     if (r.bottom < 0 || r.top > innerHeight) return;
     rp.x = lerp(rp.x, (mouse.x / innerWidth - .5) * 2, .05);
@@ -402,6 +403,21 @@
   document.addEventListener('portfolio:language', () => {
     casts.forEach(c => { splitCast(c); if (c.classList.contains('go')) { c.classList.remove('go'); void c.offsetWidth; c.classList.add('go'); } });
     splitScrub(); labelSec(); lastTemp = -1;
+  });
+
+  /* ---------- motion toggle ---------- */
+  const motionBtn = $('#motion');
+  function labelMotion() {
+    if (!motionBtn) return;
+    motionBtn.textContent = isZh() ? (reduce ? '动效 关' : '动效 开') : (reduce ? 'Motion off' : 'Motion on');
+    motionBtn.setAttribute('aria-pressed', String(!reduce));
+    motionBtn.setAttribute('aria-label', isZh() ? '开关页面动效' : 'Toggle page motion');
+  }
+  labelMotion();
+  document.addEventListener('portfolio:language', labelMotion);
+  motionBtn?.addEventListener('click', () => {
+    try { localStorage.setItem('ww-motion', reduce ? 'on' : 'off'); } catch { /* fine */ }
+    location.reload();
   });
 
   /* ---------- loop ---------- */
