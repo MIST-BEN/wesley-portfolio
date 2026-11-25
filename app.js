@@ -16,7 +16,7 @@ let previousFocus = null;
 const projects = {
   shopping: {
     en: {
-      kicker: 'Web application · Frontend Lead', title: 'Shopping Management System',
+      kicker: '01 / WEB APPLICATION · FRONTEND LEAD', title: 'Shopping Management System',
       intro: 'A React-based workspace that brings product catalogs, orders, inventory, and configurable forms into a connected management experience.',
       details: [
         ['The challenge', 'Keep data-heavy operations manageable', 'Product management involves large lists, changing inventory, and repetitive workflows. The interface needs clear information hierarchy and a data layer that can keep pace.'],
@@ -27,7 +27,7 @@ const projects = {
       demo: 'Open live demo', github: 'GitHub profile'
     },
     zh: {
-      kicker: 'Web 应用 · 前端负责人', title: '购物管理系统',
+      kicker: '01 / WEB 应用 · 前端负责人', title: '购物管理系统',
       intro: '基于 React 的管理工作空间，将商品目录、订单、库存与可配置表单连接起来，让日常运营操作更清晰。',
       details: [
         ['业务挑战', '把数据密集的操作变得可管理', '大规模商品列表、持续变化的库存与重复性操作，对信息组织和数据流转提出了要求。项目围绕列表可用性、状态同步和操作效率展开。'],
@@ -40,7 +40,7 @@ const projects = {
   },
   devtools: {
     en: {
-      kicker: 'Desktop application · Core Developer', title: 'WeChat Mini Program DevTools',
+      kicker: '02 / DESKTOP APPLICATION · CORE DEVELOPER', title: 'WeChat Mini Program DevTools',
       intro: 'A cross-platform desktop development workspace built with Electron, connecting editing, debugging, and publishing workflows for mini program development.',
       details: [
         ['The challenge', 'Reduce friction across the developer workflow', 'Development tools should help developers understand application behavior and move between development, debugging, and publishing without unnecessary context switching.'],
@@ -51,7 +51,7 @@ const projects = {
       github: 'GitHub profile'
     },
     zh: {
-      kicker: '桌面应用 · 核心开发者', title: '微信小程序开发工具',
+      kicker: '02 / 桌面应用 · 核心开发者', title: '微信小程序开发工具',
       intro: '以 Electron 构建跨平台桌面开发工作空间，围绕小程序开发、调试和发布，让工具之间的流程衔接更顺畅。',
       details: [
         ['开发挑战', '减少开发流程中的切换成本', '开发工具需要帮助使用者理解程序行为，并在开发、调试与发布环节中保持清晰的上下文。项目关注统一工作空间中的流程整合。'],
